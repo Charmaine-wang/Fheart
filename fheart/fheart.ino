@@ -47,7 +47,6 @@ int triggerPins[TRIGGER_COUNT] = {0, 1, 5, 10, A0, A1, A2, A3, A4};
 int stopPin = A5; // This pin triggers a track stop.
 int lastTrigger = 0; // This variable keeps track of which tune is playing
 int micPin = A0;
- int currentFart = 0;
 char trackName[13];
 long sum = 0;
 void setup()
@@ -65,32 +64,34 @@ Serial.begin(115200);
 
   initSD();  // Initialize the SD card
   initMP3Player(); // Initialize the MP3 Shield
-  //MP3player.playTrack(1);
 }
 
-// All the loop does is continuously step through the trigger
-//  pins to see if one is pulled low. If it is, it'll stop any
-//  currently playing track, and start playing a new one.
+
 void loop()
 {
  
   sum = analogRead(micPin);
   Serial.println(sum);
-  if (sum > 500) {  
-    MP3player.playMP3(trackName);
-    if (MP3player.isPlaying()) {
-      digitalWrite(3, HIGH);
-      delay(fartDuration[currentFart%5]);
-      Serial.println(fartDuration[currentFart%5]);
-      MP3player.stopTrack();
-      digitalWrite(3, LOW);
-      currentFart++;
-      farts[currentFart%5].toCharArray(trackName, 13); 
-    }
+  
+  if (sum > 500) {
+   playFart("track001.mp3", 5500);
   } 
   delay(100);
 }
 
+
+void playFart(String fartTrackName, int fartDuration) {
+  char currentFart[13];
+  fartTrackName.toCharArray(currentFart, 13); 
+  Serial.println(fartTrackName);
+    MP3player.playMP3(currentFart);
+    if (MP3player.isPlaying()) {
+      digitalWrite(3, HIGH);
+      delay(fartDuration);
+      MP3player.stopTrack();
+      digitalWrite(3, LOW);
+    }
+  }
 // initSD() initializes the SD card and checks for an error.
 void initSD()
 {
@@ -111,7 +112,7 @@ void initMP3Player()
   uint8_t result = MP3player.begin(); // init the mp3 player shield
   if(result != 0) // check result, see readme for error codes.
   {
-    // Error checking can go here!
+    Serial.println("oops");
   }
   MP3player.setVolume(volume, volume);
   MP3player.setMonoMode(monoMode);
