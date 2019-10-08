@@ -48,7 +48,7 @@ int stopPin = A5; // This pin triggers a track stop.
 int lastTrigger = 0; // This variable keeps track of which tune is playing
 int micPin = A0;
 
-
+int boringTimer = 0;
 int tenseTimer = 0;
 int tenseMomentCounter = 0;
 int excitingTimer = 0;
@@ -108,6 +108,7 @@ void loop()
       isAwkward = false;
     }
     if (tenseMomentCounter > 50){
+excitingTimer += 1000;
       isTense = true;
     }
     if (excitingTimer > 1000){
@@ -119,18 +120,28 @@ void loop()
         playFart("track005.mp3", 6000);
       }
       reset();
+      Serial.println("Exited");
+      delay(250);
     }
   }
-  
+  else if (sum < 10 && sum > 0){
+    boringTimer++;
+    Serial.println(boringTimer);
+  }
+  if (boringTimer > 10000){
+    playFart("track003.mp3", 4000);
+  }
   delay(10);
-
 }
 
 void reset(){
-  excitingTimer = 0;
+  isExciting = false;
   isTense = false;
   isAwkward = false;
+  highVolume = false;
   tenseMomentCounter = 0;
+  boringTimer = 0;
+  excitingTimer = 0;
 }
 
 int setBackgroundVolume(){
@@ -143,8 +154,6 @@ int setBackgroundVolume(){
 }
 
 void playFart(String fartTrackName, int fartDuration) {
-  reset();
-  isExciting = false;
   char currentFart[13];
   fartTrackName.toCharArray(currentFart, 13); 
   Serial.println(fartTrackName);
@@ -155,7 +164,7 @@ void playFart(String fartTrackName, int fartDuration) {
     MP3player.stopTrack();
     digitalWrite(3, LOW);
   }
-  
+  delay(5000);
 }
   
 // initSD() initializes the SD card and checks for an error.
