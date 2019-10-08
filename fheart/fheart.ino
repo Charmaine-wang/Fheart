@@ -85,8 +85,13 @@ void loop()
   }
   
   sum = analogRead(micPin) - backgroundNoise;
+
+  if (sum > 100){
+    Serial.println("nicve");
+    boringTimer = 0;
+  }
  
-  if (sum > 200 && !isExciting) {
+  if (sum > 200 && !isExciting && !highVolume) {
     highVolume = true;
     Serial.println("High <<volume");
     delay(50);
@@ -128,8 +133,9 @@ excitingTimer += 1000;
     boringTimer++;
     Serial.println(boringTimer);
   }
-  if (boringTimer > 10000){
+  if (boringTimer > 1000){
     playFart("track003.mp3", 4000);
+    reset();
   }
   delay(10);
 }
