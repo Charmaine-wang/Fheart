@@ -47,12 +47,22 @@ int triggerPins[TRIGGER_COUNT] = {0, 1, 5, 10, A0, A1, A2, A3, A4};
 int stopPin = A5; // This pin triggers a track stop.
 int lastTrigger = 0; // This variable keeps track of which tune is playing
 int micPin = A0;
-char trackName[13];
+
+
+int tenseTimer = 0;
+int tenseMomentCounter = 0;
+int excitingTimer = 0;
+int awkwardTimer = 0;
 long sum = 0;
+int backgroundNoise = 0;
+bool isExciting = false;
+bool isAwkward = false;
+bool isTense = false;
+bool defaultValueCalculated = false;
+bool highVolume = false;
 void setup()
 {
-  
-  farts[0].toCharArray(trackName, 13); 
+
   pinMode(3, OUTPUT);
   /* Set up all trigger pins as inputs, with pull-ups activated: */
   for (int i=0; i<TRIGGER_COUNT; i++)
@@ -69,29 +79,85 @@ Serial.begin(115200);
 
 void loop()
 {
- 
-  sum = analogRead(micPin);
-  Serial.println(sum);
+  if (!defaultValueCalculated){
+    backgroundNoise = setBackgroundVolume();
+    defaultValueCalculated = true;
+  }
   
-  if (sum > 500) {
-   playFart("track001.mp3", 5500);
-  } 
-  delay(100);
+  sum = analogRead(micPin) - backgroundNoise;
+ 
+  if (sum > 200 && !isExciting) {
+    highVolume = true;
+    Serial.println("High <<volume");
+    delay(50);
+  }
+   
+  if (highVolume && sum < 50 && !isExciting) {
+    isExciting = true;
+    isAwkward = true;
+    Serial.println("Exciting");
+  }
+  
+  if (isExciting){
+    excitingTimer++;
+    if (sum > 100){
+      tenseMomentCounter++;
+      Serial.println(tenseMomentCounter);
+    }
+    if (tenseMomentCounter == 10){
+      isAwkward = false;
+    }
+    if (tenseMomentCounter > 50){
+      isTense = true;
+    }
+    if (excitingTimer > 1000){
+      if (isAwkward){
+        Serial.println("Playing: AwkwardFart");
+        playFart("track002.mp3", 9000);
+      }else if (isTense){
+        Serial.println("Playing: TenseFart");
+        playFart("track005.mp3", 6000);
+      }
+      reset();
+    }
+  }
+  
+  delay(10);
+
 }
 
+void reset(){
+  excitingTimer = 0;
+  isTense = false;
+  isAwkward = false;
+  tenseMomentCounter = 0;
+}
+
+int setBackgroundVolume(){
+  int allSum = 0;
+  for(int i = 0; i < 25; i++){
+    allSum += analogRead(micPin);
+    delay(10);
+  }
+  return allSum/25;
+}
 
 void playFart(String fartTrackName, int fartDuration) {
+  reset();
+  isExciting = false;
   char currentFart[13];
   fartTrackName.toCharArray(currentFart, 13); 
   Serial.println(fartTrackName);
-    MP3player.playMP3(currentFart);
-    if (MP3player.isPlaying()) {
-      digitalWrite(3, HIGH);
-      delay(fartDuration);
-      MP3player.stopTrack();
-      digitalWrite(3, LOW);
-    }
+  MP3player.playMP3(currentFart);
+  if (MP3player.isPlaying()) {
+    digitalWrite(3, HIGH);
+    delay(fartDuration);
+    MP3player.stopTrack();
+    digitalWrite(3, LOW);
   }
+  
+}
+  
 // initSD() initializes the SD card and checks for an error.
 void initSD()
 {
