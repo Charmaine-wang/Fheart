@@ -70,7 +70,7 @@ void setup()
     pinMode(triggerPins[i], INPUT_PULLUP);
   }
   pinMode(stopPin, INPUT_PULLUP);
-Serial.begin(115200);
+  Serial.begin(115200);
 
   initSD();  // Initialize the SD card
   initMP3Player(); // Initialize the MP3 Shield
@@ -79,35 +79,36 @@ Serial.begin(115200);
 
 void loop()
 {
+  
   if (!defaultValueCalculated){
     backgroundNoise = setBackgroundVolume();
     defaultValueCalculated = true;
   }
   
   sum = analogRead(micPin) - backgroundNoise;
-
+ 
+  Serial.println(sum);
   if (sum > 100){
-    Serial.println("nicve");
+    //Serial.println("nice");
     boringTimer = 0;
   }
  
   if (sum > 200 && !isExciting && !highVolume) {
     highVolume = true;
-    Serial.println("High <<volume");
+    //Serial.println("High Volume");
     delay(50);
   }
    
   if (highVolume && sum < 50 && !isExciting) {
     isExciting = true;
     isAwkward = true;
-    Serial.println("Exciting");
+    //Serial.println("Exciting");
   }
   
   if (isExciting){
     excitingTimer++;
     if (sum > 100){
       tenseMomentCounter++;
-      Serial.println(tenseMomentCounter);
     }
     if (tenseMomentCounter == 10){
       isAwkward = false;
@@ -118,20 +119,19 @@ excitingTimer += 1000;
     }
     if (excitingTimer > 1000){
       if (isAwkward){
-        Serial.println("Playing: AwkwardFart");
+        
         playFart("track002.mp3", 9000);
       }else if (isTense){
-        Serial.println("Playing: TenseFart");
+       
         playFart("track005.mp3", 6000);
       }
       reset();
-      Serial.println("Exited");
+      Serial.println("Exit");
       delay(250);
     }
   }
   else if (sum < 10 && sum > 0){
     boringTimer++;
-    Serial.println(boringTimer);
   }
   if (boringTimer > 1000){
     playFart("track003.mp3", 4000);
@@ -162,14 +162,16 @@ int setBackgroundVolume(){
 void playFart(String fartTrackName, int fartDuration) {
   char currentFart[13];
   fartTrackName.toCharArray(currentFart, 13); 
-  Serial.println(fartTrackName);
+  
   MP3player.playMP3(currentFart);
   if (MP3player.isPlaying()) {
     digitalWrite(3, HIGH);
+    Serial.println(currentFart);
     delay(fartDuration);
     MP3player.stopTrack();
     digitalWrite(3, LOW);
   }
+  
   delay(5000);
 }
   
@@ -193,7 +195,7 @@ void initMP3Player()
   uint8_t result = MP3player.begin(); // init the mp3 player shield
   if(result != 0) // check result, see readme for error codes.
   {
-    Serial.println("oops");
+    //Serial.println("oops");
   }
   MP3player.setVolume(volume, volume);
   MP3player.setMonoMode(monoMode);
