@@ -1,30 +1,3 @@
-/*
-  MP3 Shield Trigger
-  by: Jim Lindblom
-      SparkFun Electronics
-  date: September 23, 2013
-
-  This is an example MP3 trigger sketch for the SparkFun MP3 Shield.
-  Pins 0, 1, 5, 10, A0, A1, A2, A3, and A4 are setup to trigger tracks
-  "track001.mp3", "track002.mp3", etc. on an SD card loaded into
-  the shield. Whenever any of those pins are shorted to ground,
-  their respective track will start playing.
-
-  When a new pin is triggered, any track currently playing will
-  stop, and the new one will start.
-
-  A5 is setup to globally STOP playing a track when triggered.
-
-  If you need more triggers, the shield's jumpers on pins 3 and 4 
-  (MIDI-IN and GPIO1) can be cut open and used as additional
-  trigger pins. Also, because pins 0 and 1 are used as triggers
-  Serial is not available for debugging. Disable those as
-  triggers if you want to use serial.
-
-  Much of this code was grabbed from the FilePlayer example
-  included with the SFEMP3Shield library. Major thanks to Bill
-  Porter and Michael Flaga, again, for this amazing library!
-*/
 
 #include <SPI.h>           // SPI library
 #include <SdFat.h>         // SDFat Library
@@ -53,7 +26,7 @@ int tenseTimer = 0;
 int tenseMomentCounter = 0;
 int excitingTimer = 0;
 int awkwardTimer = 0;
-long sum = 0;
+long vol = 0;
 int backgroundNoise = 0;
 bool isExciting = false;
 bool isAwkward = false;
@@ -85,59 +58,63 @@ void loop()
     defaultValueCalculated = true;
   }
   
-  sum = analogRead(micPin) - backgroundNoise;
+  vol = analogRead(micPin) - backgroundNoise;
  
-  Serial.println(sum);
-  if (sum > 100){
+  Serial.println(vol);
+  if (vol > 100){
     //Serial.println("nice");
     boringTimer = 0;
   }
  
-  if (sum > 200 && !isExciting && !highVolume) {
+  if (vol > 200 && !isExciting && !highVolume) {
     highVolume = true;
     //Serial.println("High Volume");
     delay(50);
   }
    
-  if (highVolume && sum < 50 && !isExciting) {
+  if (highVolume && vol < 50 && !isExciting) {
     isExciting = true;
     isAwkward = true;
-    //Serial.println("Exciting");
+    Serial.println("fartzone");
+    delay(50);
   }
   
   if (isExciting){
     excitingTimer++;
-    if (sum > 100){
+    if (vol > 100 && excitingTimer > 100){
       tenseMomentCounter++;
     }
     if (tenseMomentCounter == 10){
       isAwkward = false;
     }
     if (tenseMomentCounter > 50){
-excitingTimer += 1000;
-      isTense = true;
+        excitingTimer += 1000;
+        isTense = true;
     }
-    if (excitingTimer > 1000){
+    if (excitingTimer > 500){
       if (isAwkward){
-        
         playFart("track002.mp3", 9000);
       }else if (isTense){
-       
         playFart("track005.mp3", 6000);
+      }else {
+        Serial.println("averted");
+        delay(50);
       }
       reset();
-      Serial.println("Exit");
-      delay(250);
+      Serial.println("exit");
+      delay(50);
     }
   }
-  else if (sum < 10 && sum > 0){
+  else if (vol < 10 && vol > 0){
     boringTimer++;
   }
   if (boringTimer > 1000){
     playFart("track003.mp3", 4000);
     reset();
+    Serial.println("reset");
+    
   }
-  delay(10);
+  delay(20);
 }
 
 void reset(){
@@ -151,12 +128,12 @@ void reset(){
 }
 
 int setBackgroundVolume(){
-  int allSum = 0;
+  int allVol = 0;
   for(int i = 0; i < 25; i++){
-    allSum += analogRead(micPin);
+    allVol += analogRead(micPin);
     delay(10);
   }
-  return allSum/25;
+  return allVol/25;
 }
 
 void playFart(String fartTrackName, int fartDuration) {
@@ -171,14 +148,12 @@ void playFart(String fartTrackName, int fartDuration) {
     MP3player.stopTrack();
     digitalWrite(3, LOW);
   }
-  
   delay(5000);
 }
   
 // initSD() initializes the SD card and checks for an error.
 void initSD()
 {
-
   //Initialize the SdCard.
   if(!sd.begin(SD_SEL, SPI_HALF_SPEED))
     sd.initErrorHalt();
