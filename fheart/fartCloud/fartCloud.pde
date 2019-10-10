@@ -114,17 +114,15 @@ void draw() {
     rect(-screenWidth/2 + i, -20 + rectHeight, rectWidth, rectHeight);
     
   }
-  
+  str = "";
   // Playing fart
   if (myString.contains("track")) {
-    str = "";
+    
     println(myString);
     if (myString.contains("002")) { aFarts++; str = "AWKWARD/SILENCE/DETECTED:release";}
     if (myString.contains("005")) { tFarts++; str = "TENSION/TENSE/DETECTED:release";}
     if (myString.contains("003")) { bFarts++; str = "BORING/DETECTED:release";}
-    textAlign(CENTER);
-    textSize(20);
-    text(str, 0, -200);
+
   }
   if (myString.contains("fartzone")) {
     println(myString);
@@ -229,7 +227,10 @@ void draw() {
   image(screen, -windowWidth/2 ,-windowHeight/2); 
   
   
-  
+    textAlign(CENTER);
+    textSize(20);
+    fill(255, 50, 0);
+    text(str, 0, -200);
 }
  
 void serialEvent(final Serial s) {
